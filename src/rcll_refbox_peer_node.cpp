@@ -349,7 +349,7 @@ handle_message(boost::asio::ip::udp::endpoint &sender,
 					rr.zone = r.reached(j);
 					rnr.route.push_back(rr);
 				}*/
-				printf("remaining_size: %d\n", r.remaining_size());
+				// printf("remaining_size: %d\n", r.remaining_size());
 				for (int j = 0; j < r.remaining_size(); ++j) {
 				       	rr.zone = r.remaining(j);
 					rnr.route.push_back(rr);
