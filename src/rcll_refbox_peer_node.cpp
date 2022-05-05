@@ -331,16 +331,16 @@ handle_message(boost::asio::ip::udp::endpoint &sender,
 		std::shared_ptr<NavigationRoutes> nr;
 		if ((nr = std::dynamic_pointer_cast<NavigationRoutes>(msg))) {
 			rcll_ros_msgs::NavigationRoutes rnr;
-			// printf("NavigationRoutes received\n");
-			// printf("routes_size: %d\n", nr->routes_size());
+			printf("NavigationRoutes received\n");
+			printf("routes_size: %d\n", nr->routes_size());
 			for (int i = 0; i < nr->routes_size(); ++i) {
 				const llsf_msgs::Route &r = nr->routes(i);
 				llsf_msgs::Zone rz;
 				rcll_ros_msgs::Route rr;
 				rr.id        = r.id();
-				// printf("route size: %d\n", r.route_size());
-				// printf("reached_size: %d\n", r.reached_size());
-				// printf("remaining_size: %d\n", r.remaining_size());
+				printf("route size: %d\n", r.route_size());
+				printf("reached_size: %d\n", r.reached_size());
+				printf("remaining_size: %d\n", r.remaining_size());
 				/*for (int j = 0; j < r.route_size();    ++j) {
 					rr.zone = r.route(j);
 					rnr.route.push_back(rr);
