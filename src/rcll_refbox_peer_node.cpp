@@ -434,8 +434,13 @@ srv_cb_send_beacon(rcll_ros_msgs::SendBeaconSignal::Request  &req,
 		} else {
 			b.mutable_pose()->mutable_timestamp()->set_sec(req.pose.header.stamp.sec);
 			b.mutable_pose()->mutable_timestamp()->set_nsec(req.pose.header.stamp.nsec);
+<<<<<<< HEAD
 			b.mutable_pose()->set_x(req.pose.pose.position.x ); // / 1000);
 			b.mutable_pose()->set_y(req.pose.pose.position.y ); // / 1000);
+=======
+			b.mutable_pose()->set_x(req.pose.pose.position.x);
+			b.mutable_pose()->set_y(req.pose.pose.position.y);
+>>>>>>> 0ad3d9e9946f2693ed22bb63c58e5010628c22d5
 			tf2::Quaternion q(req.pose.pose.orientation.x, req.pose.pose.orientation.y,
 			                  req.pose.pose.orientation.z, req.pose.pose.orientation.w);
 			b.mutable_pose()->set_ori(tf2::getYaw(q));
