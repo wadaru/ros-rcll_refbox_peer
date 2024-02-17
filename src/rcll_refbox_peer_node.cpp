@@ -34,6 +34,8 @@
 #include <llsf_msgs/RingInfo.pb.h>
 #include <llsf_msgs/MachineInstructions.pb.h>
 #include <llsf_msgs/NavigationChallenge.pb.h>
+#include <llsf_msgs/AgentTask.pb.h>
+#include <llsf_msgs/ProductColor.pb.h>
 
 #include <rcll_ros_msgs/BeaconSignal.h>
 #include <rcll_ros_msgs/GameState.h>
@@ -45,11 +47,14 @@
 #include <rcll_ros_msgs/RingInfo.h>
 #include <rcll_ros_msgs/NavigationRoutes.h>
 #include <rcll_ros_msgs/Route.h>
+#include <rcll_ros_msgs/AgentTask.h>
+#include <rcll_ros_msgs/ProductColor.h>
 
 #include <rcll_ros_msgs/SendBeaconSignal.h>
 #include <rcll_ros_msgs/SendMachineReport.h>
 #include <rcll_ros_msgs/SendMachineReportBTR.h>
 #include <rcll_ros_msgs/SendPrepareMachine.h>
+#include <rcll_ros_msgs/SendAgentTask.h>
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/utils.h>
@@ -97,10 +102,12 @@ ros::Publisher pub_machine_report_info_;
 ros::Publisher pub_order_info_;
 ros::Publisher pub_ring_info_;
 ros::Publisher pub_navigation_routes_info_;
+ros::Publisher pub_agent_task_;
 
 ros::ServiceServer srv_send_beacon_;
 ros::ServiceServer srv_send_machine_report_;
 ros::ServiceServer srv_send_prepare_machine_;
+ros::ServiceServer srv_send_agent_task_;
 
 ProtobufBroadcastPeer *peer_public_ = NULL;
 ProtobufBroadcastPeer *peer_private_ = NULL;
@@ -156,6 +163,53 @@ handle_message(boost::asio::ip::udp::endpoint &sender,
 		if (! version_info_printed && (v = std::dynamic_pointer_cast<VersionInfo>(msg))) {
 			ROS_INFO("Referee Box %s detected", v->version_string().c_str());
 			version_info_printed = true;
+		}
+	}
+
+	{
+		std::shared_ptr<AgentTask> at;
+		if ((at = std::dynamic_pointer_cast<AgentTask>(msg))){
+			// ROS_INFO("Received agent task from %s:%s", at->team_name().c_str(), at->peer_name().c_str());
+			rcll_ros_msgs::AgentTask rat;
+			rat.team_color = pb_to_ros_team_color(at->team_color());
+			rat.task_id = at->task_id();
+			rat.robot_id = at->robot_id();
+			if (at->has_move()) {
+				rat.move.waypoint = at->move().waypoint();
+				rat.move.machine_point = at->move().machine_point();
+                        }
+			if (at->has_retrieve()) {
+				rat.retrieve.machine_id = at->retrieve().machine_id();
+				rat.retrieve.machine_point = at->retrieve().machine_point();
+			}
+			if (at->has_deliver()) {
+				rat.deliver.machine_id = at->deliver().machine_id();
+				rat.deliver.machine_point =at->deliver().machine_point();
+			}
+			if (at->has_buffer()) {
+				rat.buffer.machine_id = at->buffer().machine_id();
+				rat.buffer.shelf_number = at->buffer().shelf_number();
+			}
+			if (at->has_explore_machine()){
+				rat.explore_machine.machine_id = at->explore_machine().machine_id();
+				rat.explore_machine.machine_point = at->explore_machine().machine_point();
+				rat.explore_machine.waypoint = at->explore_machine().waypoint();
+			}
+			if (at->has_workpiece_description()){
+				rat.workpiece_description.base_color = at->workpiece_description().base_color();
+ 				for (int i = 0; i < at->workpiece_description().ring_colors_size(); ++i) {
+                                        rat.workpiece_description.ring_colors.push_back((int)at->workpiece_description().ring_colors(i));
+                                }
+				rat.workpiece_description.cap_color = at->workpiece_description().cap_color();
+			}
+			if (at->has_order_id())		rat.order_id = at->order_id();
+			if (at->has_cancel_task())	rat.cancel_task = at->cancel_task();
+			if (at->has_pause_task())	rat.pause_task = at->pause_task();
+			if (at->has_successful())	rat.successful = at->successful();
+			if (at->has_canceled())		rat.canceled = at->canceled();
+			if (at->has_error_code())	rat.error_code = at->error_code();
+
+			pub_agent_task_.publish(rat);
 		}
 	}
 
@@ -404,6 +458,74 @@ setup_private_peer(llsf_msgs::Team team_color)
 }
 
 bool
+srv_cb_send_agent_task(rcll_ros_msgs::SendAgentTask::Request  &req,
+		       rcll_ros_msgs::SendAgentTask::Response &res)
+{
+	if (! peer_private_) {
+		res.ok = false;
+		res.error_msg = "Cannot send agent task: private peer not setup, team not set in refbox?";
+		return true;
+	}
+
+	llsf_msgs::AgentTask at;
+	at.set_team_color(ros_to_pb_team_color(cfg_team_color_));
+	at.set_task_id(req.task_id);
+	at.set_robot_id(req.robot_id);
+
+	// at.set_move(req.move);
+	llsf_msgs::Move *atm = at.mutable_move();
+	atm->set_waypoint(req.move.waypoint);
+	atm->set_machine_point(req.move.machine_point);
+
+	// at.set_retrieve(req.retrieve);
+	llsf_msgs::Retrieve *atr = at.mutable_retrieve();
+	atr->set_machine_id(req.retrieve.machine_id);
+	atr->set_machine_point(req.retrieve.machine_point);
+
+	// at.set_deliver(req.deliver)
+	llsf_msgs::Deliver *atd = at.mutable_deliver();
+	atd->set_machine_id(req.deliver.machine_id);
+	atd->set_machine_point(req.deliver.machine_point);
+
+	// at.set_bufferstation(req.buffer)
+	llsf_msgs::BufferStation *atb = at.mutable_buffer();
+	atb->set_machine_id(req.buffer.machine_id);
+	atb->set_shelf_number(req.buffer.shelf_number);
+
+	// at.set_explorewaypoint(req.explore_machine);
+	llsf_msgs::ExploreWaypoint *ate = at.mutable_explore_machine();
+	ate->set_machine_id(req.explore_machine.machine_id);
+	ate->set_machine_point(req.explore_machine.machine_point);
+	ate->set_waypoint(req.explore_machine.waypoint);
+
+	// at.set_workpiecedescription(req.workpiece_description);
+	llsf_msgs::WorkpieceDescription *atw = at.mutable_workpiece_description();
+	atw->set_base_color((llsf_msgs::BaseColor)req.workpiece_description.base_color);
+        for (size_t i = 0; i < req.workpiece_description.ring_colors.size(); ++i) {
+		atw->add_ring_colors((llsf_msgs::RingColor)req.workpiece_description.ring_colors[i]);
+        }
+	atw->set_cap_color((llsf_msgs::CapColor)req.workpiece_description.cap_color);
+
+	at.set_order_id(req.order_id);
+	at.set_cancel_task(req.cancel_task);
+	at.set_pause_task(req.pause_task);
+	at.set_successful(req.successful);
+	at.set_canceled(req.canceled);
+	at.set_error_code(req.error_code);
+
+        try {
+                ROS_DEBUG("Sending agent Task %c:%c)", at.task_id(), at.robot_id());
+                peer_private_->send(at);
+                res.ok = true;
+        } catch (std::runtime_error &e) {
+                res.ok = false;
+                res.error_msg = e.what();
+        }
+
+        return true;
+}
+
+bool
 srv_cb_send_beacon(rcll_ros_msgs::SendBeaconSignal::Request  &req,
                    rcll_ros_msgs::SendBeaconSignal::Response &res)
 {
@@ -442,7 +564,7 @@ srv_cb_send_beacon(rcll_ros_msgs::SendBeaconSignal::Request  &req,
 		}
 	}
 
-	printf("Sending beacon %s:%s (seq %lu) (%f, %f, %f)\n", b.team_name().c_str(), b.peer_name().c_str(), b.seq(), b.mutable_pose()->x(), b.mutable_pose()->y(), b.mutable_pose()->ori());
+	// printf("Sending beacon %s:%s (seq %lu) (%f, %f, %f)\n", b.team_name().c_str(), b.peer_name().c_str(), b.seq(), b.mutable_pose()->x(), b.mutable_pose()->y(), b.mutable_pose()->ori());
 	try {
 		ROS_DEBUG("Sending beacon %s:%s (seq %lu)", b.team_name().c_str(), b.peer_name().c_str(), b.seq());
 	       	peer_private_->send(b);
@@ -742,6 +864,7 @@ main(int argc, char **argv)
 	GET_PRIV_PARAM(crypto_cipher);
 
 	// Setup ROS topics
+	pub_agent_task_ = n.advertise<rcll_ros_msgs::AgentTask>("rcll/agent_task", 100);
 	pub_beacon_ = n.advertise<rcll_ros_msgs::BeaconSignal>("rcll/beacon", 100);
 	pub_game_state_ = n.advertise<rcll_ros_msgs::GameState>("rcll/game_state", 10);
 	pub_machine_info_ = n.advertise<rcll_ros_msgs::MachineInfo>("rcll/machine_info", 10);
@@ -766,6 +889,7 @@ main(int argc, char **argv)
 
   MessageRegister & message_register = peer_public_->message_register();
   message_register.add_message_type<llsf_msgs::VersionInfo>();
+  message_register.add_message_type<llsf_msgs::AgentTask>();
   message_register.add_message_type<llsf_msgs::BeaconSignal>();
   message_register.add_message_type<llsf_msgs::GameState>();
   message_register.add_message_type<llsf_msgs::MachineInfo>();
@@ -782,6 +906,7 @@ main(int argc, char **argv)
   peer_public_->signal_send_error().connect(handle_send_error);
 
   // provide services
+  srv_send_agent_task_ = n.advertiseService("/rcll/send_agent_task", srv_cb_send_agent_task);
   srv_send_beacon_ = n.advertiseService("rcll/send_beacon", srv_cb_send_beacon);
   srv_send_machine_report_ = n.advertiseService("rcll/send_machine_report", srv_cb_send_machine_report);
   srv_send_prepare_machine_ = n.advertiseService("rcll/send_prepare_machine", srv_cb_send_prepare_machine);
