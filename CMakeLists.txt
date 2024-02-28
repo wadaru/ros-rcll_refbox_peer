@@ -131,11 +131,11 @@ elseif (Fawkes_FOUND)
 
 elseif (RCLLRefbox_FOUND)
   list(APPEND _LIBRARIES "llsf_msgs")
-  list(APPEND Fawkes_INCLUDE_DIRS "~/rcll-refbox/src/libs/")
-  list(APPEND Fawkes_LIBRARIES "~/rcll-refbox/lib/libllsf_protobuf_comm.so")
-  list(APPEND Fawkes_LIBRARIES "~/rcll-refbox/lib/protobuf/libllsf_msgs.so")
-  list(APPEND Fawkes_LIBRARIES "~/rcll-refbox/lib/protobuf/libllsf_log_msgs.so")
-  list(APPEND Fawkes_LIBRARIES "~/rcll-refbox/lib/libmps_comm.so")
+  list(APPEND Fawkes_INCLUDE_DIRS "/home/robotino/rcll-refbox/src/libs/")
+  list(APPEND Fawkes_LIBRARIES "/home/robotino/rcll-refbox/lib/libllsf_protobuf_comm.so")
+  list(APPEND Fawkes_LIBRARIES "/home/robotino/rcll-refbox/lib/protobuf/libllsf_msgs.so")
+  list(APPEND Fawkes_LIBRARIES "/home/robotino/rcll-refbox/lib/protobuf/libllsf_log_msgs.so")
+  list(APPEND Fawkes_LIBRARIES "/home/robotino/rcll-refbox/lib/libmps_comm.so")
   list(APPEND Fawkes_LIBRARIES "/usr/lib/x86_64-linux-gnu/libprotobuf.so")
 
 	# Use Fawkes' protobuf_comm
