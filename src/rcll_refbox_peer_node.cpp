@@ -284,6 +284,7 @@ handle_message(boost::asio::ip::udp::endpoint &sender,
 				if (m.has_state()) rm.state = m.state();
 				if (m.has_team_color()) pb_to_ros_team_color(m.team_color());
 				if (m.has_zone()) rm.zone = (int)m.zone();
+				if (m.has_rotation()) rm.rotation = (int)m.rotation();
 				for (int j = 0; j < m.ring_colors_size(); ++j) {
 					rm.rs_ring_colors.push_back((int)m.ring_colors(j));
 				}
@@ -361,6 +362,7 @@ handle_message(boost::asio::ip::udp::endpoint &sender,
 				ro.delivery_period_end = o.delivery_period_end();
 				ro.delivery_gate = o.delivery_gate();
 				roi.orders.push_back(ro);
+				// printf("Order Info %d : %d\n", i, ro.id);
 			}
 			pub_order_info_.publish(roi);
 		}
