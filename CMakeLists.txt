@@ -130,7 +130,7 @@ elseif (Fawkes_FOUND)
   message(STATUS "Using Fawkes protobuf_comm")
 
 elseif (RCLLRefbox_FOUND)
-  list(APPEND _LIBRARIES "llsf_msgs")
+  list(APPEND _LIBRARIES "rcll_msgs")
   list(APPEND Fawkes_INCLUDE_DIRS "/home/robotino/rcll-refbox/src/libs/")
   list(APPEND Fawkes_LIBRARIES "/home/robotino/rcll-refbox/lib/libllsf_protobuf_comm.so")
   list(APPEND Fawkes_LIBRARIES "/home/robotino/rcll-refbox/lib/protobuf/librcll_msgs.so")
