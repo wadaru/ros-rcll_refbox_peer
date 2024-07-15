@@ -267,6 +267,10 @@ handle_message(boost::asio::ip::udp::endpoint &sender,
 				}
 				rgs.team_magenta = gs->team_magenta();
 			}
+			if (gs->has_field_height()) rgs.field_height = gs->field_height();
+			if (gs->has_field_width()) rgs.field_width = gs->field_width();
+			if (gs->has_field_mirrored()) rgs.field_mirrored = gs->field_mirrored();
+
 
 			pub_game_state_.publish(rgs);
 		}
