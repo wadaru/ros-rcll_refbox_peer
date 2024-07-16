@@ -566,11 +566,11 @@ srv_cb_send_beacon(rcll_ros_msgs::SendBeaconSignal::Request  &req,
 			b.mutable_pose()->set_y(req.pose.pose.position.y);
 			tf2::Quaternion q(req.pose.pose.orientation.x, req.pose.pose.orientation.y,
 			                  req.pose.pose.orientation.z, req.pose.pose.orientation.w);
-			b.mutable_pose()->set_ori(tf2::getYaw(q));
+			b.mutable_pose()->set_ori(tf2::getYaw(q) / 3.14159 * 180 * -1);
 		}
 	}
 
-	// printf("Sending beacon %s:%s (seq %lu) (%f, %f, %f)\n", b.team_name().c_str(), b.peer_name().c_str(), b.seq(), b.mutable_pose()->x(), b.mutable_pose()->y(), b.mutable_pose()->ori());
+	printf("Sending beacon %s:%s (seq %lu) (%f, %f, %f)\n", b.team_name().c_str(), b.peer_name().c_str(), b.seq(), b.mutable_pose()->x(), b.mutable_pose()->y(), b.mutable_pose()->ori());
 	try {
 		ROS_DEBUG("Sending beacon %s:%s (seq %lu)", b.team_name().c_str(), b.peer_name().c_str(), b.seq());
 	       	peer_private_->send(b);
