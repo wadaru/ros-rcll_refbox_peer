@@ -566,7 +566,7 @@ srv_cb_send_beacon(rcll_ros_msgs::SendBeaconSignal::Request  &req,
 			b.mutable_pose()->set_y(req.pose.pose.position.y);
 			tf2::Quaternion q(req.pose.pose.orientation.x, req.pose.pose.orientation.y,
 			                  req.pose.pose.orientation.z, req.pose.pose.orientation.w);
-			b.mutable_pose()->set_ori(tf2::getYaw(q) / 3.14159 * 180 * -1);
+			b.mutable_pose()->set_ori(tf2::getYaw(q) / 3.14159 * 180.0 * -1.0 - 90.0);
 		}
 	}
 
